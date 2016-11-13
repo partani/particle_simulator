@@ -1,0 +1,152 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d.axes3d as p3
+import matplotlib.animation as animation
+import random
+import numpy
+import time
+
+
+
+
+# r= no. of particles to simulatr
+# p = iteration 
+r = input('Please Enter number of particles to Simulate \nNote: The larget the number the more it will take time\n')
+print 'This Run will Simulate',r,'particles\n'
+a,p = input('Please Enter the number of iterartions , Each iterarion is almost 100 milliseconds\n')
+print a
+print p 
+print 'The run will have',p,'iterations\n'
+bb = input('1.Time dependent Electric Field.\n2.Time independent Electric field.\n')
+bc = input('1.Time dependent Magnetic Field\n2.Time independent Magnetic field.\n')
+print 'The '
+    
+    
+    
+
+Ex =  input('Enter Electric field in X direction \n')
+
+Ey =  input('Enter Electric field in Y direction \n')
+Ez =  input('Enter Electric field in Z direction \n')
+Bx =  input('Enter Magnetic field in X direction \n')
+By =  input('Enter Magnetic field in Y direction \n')
+Bz =  input('Enter Magnetic field in Z direction \n')
+print 'Electric Field :\n',Ex,Ey,Ez
+print 'Magnetic Field : \n',Bx,By,Bz,
+size = input('\nEnter Box Size')
+print 'The size of box choosen is',size 
+
+
+
+
+data = numpy.zeros((r,3,p-1))
+
+prop = numpy.zeros((r,2))
+
+# n = time instant
+# m is for particle#
+#prop [0] is charge
+#prop [1] is mass
+for m in range (0,r):
+    
+    data[m][0][0] = random.uniform(0.0,10.0)
+    data[m][1][0] = random.uniform(0.0,10.0)
+    data[m][2][0] = random.uniform(0.0,10.0)
+    prop[m][0] = random.uniform(1.0,5.0)
+    prop[m][1] = random.uniform(1.0,5.0)
+    
+vel = numpy.zeros((r,3))
+acc = numpy.zeros((r,3)) 
+
+dt = 0.002
+
+for n in range (0,p-2):
+    for m in range (0,r):
+        acc[m][0] = (prop[m][0]/prop[m][1])*(Ex + (vel[m][1]*Bz - vel[m][2]*By))
+        acc[m][1] = (prop[m][0]/prop[m][1])*(Ey + (vel[m][2]*Bx - vel[m][0]*Bz))
+        acc[m][2] = (prop[m][0]/prop[m][1])*(Ez + (vel[m][0]*By - vel[m][1]*Bx))
+
+        # integrating Numerically for velocity
+
+        vel[m][0] = vel[m][0] + acc[m][0]*dt
+        vel[m][1] = vel[m][1] + acc[m][1]*dt
+        vel[m][2] = vel[m][2] + acc[m][2]*dt
+
+        #integtrating numerically for position
+        
+        data[m][0][n+1] = data[m][0][n] + vel[m][0]*dt
+        data[m][1][n+1] = data[m][1][n] + vel[m][1]*dt
+        data[m][2][n+1] = data[m][2][n] + vel[m][2]*dt
+
+        #Checking Boundary Conditions
+        if data[m][0][n+1] > size :
+            data[m][0][n+1] = 2*size - data[m][0][n+1]
+            vel[m][0] = -1*vel[m][0]
+
+        if data[m][0][n+1] < 0.0 :
+            data[m][0][n+1] = -1*data[m][0][n+1]
+            vel[m][0] = -1*vel[m][0]
+
+
+
+        if data[m][1][n+1] > size :
+            data[m][1][n+1] = 2*size - data[m][1][n+1]
+            vel[m][1] = -1*vel[m][1]
+
+        if data[m][1][n+1] < 0.0 :
+            data[m][1][n+1] = -1*data[m][1][n+1]
+            vel[m][1] = -1*vel[m][1]
+
+
+
+        if data[m][2][n+1] > size :
+            data[m][2][n+1] = 2*size - data[m][2][n+1]
+            vel[m][2] = -1*vel[m][2]
+
+        if data[m][2][n+1] < 0.0 :
+            data[m][2][n+1] = -1*data[m][2][n+1]
+            vel[m][2] = -1*vel[m][2]
+
+
+print data
+
+def update_lines(num, dataLines, lines):
+    
+    for line, data in zip(lines, dataLines):
+        # NOTE: there is no .set_data() for 3 dim data...
+        line.set_data(data[0:2, :num])
+        line.set_3d_properties(data[2, :num])
+        
+    return lines
+
+#num = time
+
+
+# Attaching 3D axis to the figure
+fig = plt.figure()
+ax = p3.Axes3D(fig)
+
+# Fifty lines of random 3-D lines
+#data = [Gen_RandLine(1000, 3) for index in range(100)]
+
+# Creating fifty line objects.
+# NOTE: Can't pass empty arrays into 3d version of plot()
+lines = [ax.plot(dat[0, 0:1], dat[1, 0:1], dat[2, 0:1])[0] for dat in data]
+
+# Setting the axes properties
+ax.set_xlim3d([size, 0.0])
+ax.set_xlabel('X')
+
+ax.set_ylim3d([0, size])
+ax.set_ylabel('Y')
+
+ax.set_zlim3d([0.0, size])
+ax.set_zlabel('Z')
+
+ax.set_title('The Particle Simulator')
+print update_lines
+# Creating the Animation object
+line_ani = animation.FuncAnimation(fig, update_lines, p, fargs=(data, lines),
+                                  interval=100, blit=False)
+
+plt.show()
